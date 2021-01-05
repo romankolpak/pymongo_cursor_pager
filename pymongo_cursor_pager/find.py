@@ -10,8 +10,8 @@ from pymongo_cursor_pager.encode import decode_cursor, encode_cursor
 @dataclass
 class PaginatedResult:
     data: list
-    next: Optional[str]
-    previous: Optional[str]
+    next_cursor: Optional[str]
+    prev_cursor: Optional[str]
     has_next: bool
 
 
@@ -101,7 +101,7 @@ def find(
 
     return PaginatedResult(
         data=items,
-        next=encode_cursor(next_cursor) if next_cursor is not None else None,
-        previous=encode_cursor(prev_cursor) if prev_cursor is not None else None,
+        next_cursor=encode_cursor(next_cursor) if next_cursor is not None else None,
+        prev_cursor=encode_cursor(prev_cursor) if prev_cursor is not None else None,
         has_next=has_next
     )
