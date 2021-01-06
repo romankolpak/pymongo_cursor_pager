@@ -26,8 +26,8 @@ def base64_decode(string):
 
 
 def encode_cursor(cursor: dict) -> str:
-    return base64_encode(bson.encode(cursor)).decode('utf8')
+    return base64_encode(bson.encode(cursor)).decode("utf8")
 
 
 def decode_cursor(cursor_str: str) -> dict:
-    return bson.decode(base64_decode(cursor_str.encode('utf8')))
+    return bson.decode(base64_decode(cursor_str.encode("utf8")))
