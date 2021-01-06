@@ -6,7 +6,26 @@ This package implements cursor-based pagination for Python apps using PyMongo. I
 
 A more classical offset-based pagination approach where offset/limit parameters are passed in the HTTP 
 request has a pretty big downside -- it may skip over records which are being added to the list in-between HTTP requests.
-One way to solve this is to paginate using "cursors",
+One way to solve this is to paginate using "cursors", e.g.:
+
+```
+GET /records?limit=2
+{ 
+  "data": ["foo", "bar],
+  "next_cursor": "IAAAAANfaWQAFgAAAAckZ3QAX5a1_Cq0RUg2wvYkAAA",
+  "has_next": true
+}
+
+GET /records?limit=2&cursor=IAAAAANfaWQAFgAAAAckZ3QAX5a1_Cq0RUg2wvYkAAA
+{ 
+  "data": ["baz", "quux"],
+  "next_cursor": null,
+  "has_next": false
+}
+```
+
+This avoids skipping over records even if the underlying dataset is dynamic and changes frequently.
+
 
 ## Installation
 
