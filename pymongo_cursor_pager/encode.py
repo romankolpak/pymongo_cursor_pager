@@ -1,6 +1,4 @@
 import base64
-import json
-
 import bson
 
 
@@ -27,11 +25,9 @@ def base64_decode(string):
     return base64.urlsafe_b64decode(string)
 
 
-def encode_cursor(cursor):
-    return base64_encode(bson.encode(cursor))
+def encode_cursor(cursor: dict) -> str:
+    return base64_encode(bson.encode(cursor)).decode('utf8')
 
 
-def decode_cursor(cursor_str):
-    return bson.decode(
-        base64_decode(cursor_str)
-    )
+def decode_cursor(cursor_str: str) -> dict:
+    return bson.decode(base64_decode(cursor_str.encode('utf8')))
