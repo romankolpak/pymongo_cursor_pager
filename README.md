@@ -30,7 +30,7 @@ This avoids skipping over records even if the underlying dataset is dynamic and 
 ## Installation
 
 ```
-pip install pymongo_cursor_pager
+pip install pymongo-cursor-pager
 ```
 
 ## API
