@@ -3,9 +3,9 @@
 from distutils.core import setup
 
 setup(
-    name="PyMongo Cursor Pager",
+    name="pymongo_cursor_pager",
     version="0.0.1",
-    description="Cursor-based pagination for PyMongo",
+    description="Cursor-based pagination for apps using PyMongo",
     author="Roman Kolpak",
     author_email="roman.kolpak@gmail.com",
     url="",
