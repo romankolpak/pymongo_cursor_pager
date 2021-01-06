@@ -2,7 +2,7 @@
 
 This package implements cursor-based pagination for Python apps using PyMongo. Inspired a similar tool [mixmaxhq/mongo-cursor-pagination](https://github.com/mixmaxhq/mongo-cursor-pagination) for JavaScript.
 
-## What is cursor-based pagination
+## What is cursor-based pagination?
 
 A more classical offset-based pagination approach where offset/limit parameters are passed in the HTTP 
 request has a pretty big downside -- it may skip over records which are being added to the list in-between HTTP requests.
