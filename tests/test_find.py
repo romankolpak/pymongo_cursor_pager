@@ -6,6 +6,7 @@ import os
 
 from bson import ObjectId
 
+from pymongo_cursor_pager.encode import decode_cursor
 from pymongo_cursor_pager.find import find, PaginatedResult
 
 
@@ -79,3 +80,31 @@ def test_cursor(collection):
     assert result.has_next is False
     assert result.prev_cursor is None
     assert result.next_cursor is None
+
+
+def test_cursor_with_a_sorted_query(collection):
+    result = find(
+        collection=collection,
+        query={"age": {"$gte": 24}},
+        sort=("age", pymongo.DESCENDING),
+        limit=2,
+    )
+
+    assert result.data == [
+        {"_id": match_any(ObjectId), "name": "Alice", "age": 26},
+        {"_id": match_any(ObjectId), "name": "Jane", "age": 25},
+    ]
+    print(decode_cursor(result.next_cursor))
+
+    result = find(
+        collection=collection,
+        query={"age": {"$gte": 24}},
+        sort=("age", pymongo.DESCENDING),
+        limit=2,
+        next_cursor=result.next_cursor,
+    )
+
+    assert result.data == [
+        {"_id": match_any(ObjectId), "name": "Peter", "age": 24},
+        {"_id": match_any(ObjectId), "name": "John", "age": 24},
+    ]

@@ -1,6 +1,6 @@
 import pymongo
 from dataclasses import dataclass
-from typing import Optional, Iterable, Tuple
+from typing import Optional, Iterable, Tuple, Sized, List
 
 from pymongo.collection import Collection
 
@@ -16,7 +16,7 @@ class PaginatedResult:
     has_previous: bool
 
 
-def get_pagination_query_and_direction(
+def get_pagination_query(
     next_cursor: Optional[str], previous_cursor: Optional[str]
 ) -> dict:
     if next_cursor:
@@ -28,52 +28,49 @@ def get_pagination_query_and_direction(
     return {}
 
 
-def get_next_cursor(
-    query_result: list, sorted_by: Optional[Iterable[Tuple]]
+def get_cursor(
+    query_result: list, sorted_by: List[Tuple], is_moving_forward: bool = True
 ) -> Optional[dict]:
-    if sorted_by is None:
-        sorted_by = []
-
     try:
-        last_item = query_result[-1]
+        reference_item = query_result[-1] if is_moving_forward else query_result[0]
     except IndexError:
         return None
 
-    if "_id" not in dict(sorted_by):
-        sorted_by += [("_id", pymongo.ASCENDING)]
+    def comparison_op(sdir):
+        if is_moving_forward:
+            return "$gt" if sdir == pymongo.ASCENDING else "$lt"
 
-    next_query = {}
+        return "$lt" if sdir == pymongo.ASCENDING else "$gt"
 
-    for (field_name, sort_direction) in sorted_by:
-        comparison_op = "$gt" if sort_direction == pymongo.ASCENDING else "$lt"
-        last_value = last_item[field_name]
-        next_query[field_name] = {comparison_op: last_value}
+    if len(sorted_by) == 1:
+        _, sort_direction = sorted_by[0]
+        return {"_id": {comparison_op(sort_direction): reference_item["_id"]}}
 
-    return next_query
+    if len(sorted_by) == 2:
+        non_id_field_name, sort_dir = next(x for x in sorted_by if not x[0] == "_id")
+        return {
+            "$or": [
+                {
+                    non_id_field_name: {
+                        comparison_op(sort_dir): reference_item[non_id_field_name]
+                    }
+                },
+                {
+                    non_id_field_name: reference_item[non_id_field_name],
+                    "_id": {comparison_op(sort_dir): reference_item["_id"]},
+                },
+            ]
+        }
+
+    raise ValueError("Invalid sorted_by value.")
 
 
-def get_previous_cursor(
-    query_result: list, sorted_by: Optional[Iterable[tuple]]
-) -> Optional[dict]:
-    if sorted_by is None:
-        sorted_by = []
+def get_next_cursor(query_result: list, sorted_by: List[Tuple]) -> Optional[dict]:
+    return get_cursor(query_result, sorted_by, is_moving_forward=True)
 
-    try:
-        first_item = query_result[0]
-    except IndexError:
-        return None
 
-    if "_id" not in dict(sorted_by):
-        sorted_by += [("_id", pymongo.ASCENDING)]
-
-    prev_query = {}
-
-    for (field_name, sort_direction) in sorted_by:
-        comparison_op = "$lt" if sort_direction == pymongo.ASCENDING else "$gt"
-        first_value = first_item[field_name]
-        prev_query[field_name] = {comparison_op: first_value}
-
-    return prev_query
+def get_prev_cursor(query_result: list, sorted_by: List[Tuple]) -> Optional[dict]:
+    return get_cursor(query_result, sorted_by, is_moving_forward=False)
 
 
 def find(
@@ -82,13 +79,24 @@ def find(
     limit: int,
     next_cursor: Optional[str] = None,
     prev_cursor: Optional[str] = None,
-    sort: Optional[Iterable[tuple]] = None,
     projection: Optional[dict] = None,
+    sort: Optional[Tuple] = None,
 ) -> PaginatedResult:
-    pagination_query = get_pagination_query_and_direction(next_cursor, prev_cursor)
+    pagination_query = get_pagination_query(next_cursor, prev_cursor)
     query = {"$and": [pagination_query, query]}
+
+    if sort is None:
+        sort = ("_id", pymongo.ASCENDING)
+
+    sort_field, sort_dir = sort
+
+    if not sort_field == "_id":
+        sorted_by = [(sort_field, sort_dir), ("_id", sort_dir)]
+    else:
+        sorted_by = [(sort_field, sort_dir)]
+
     # query 1 more than we need just to see if there are more pages
-    cursor = collection.find(query, projection).limit(limit + 1)
+    cursor = collection.find(query, projection).limit(limit + 1).sort(sorted_by)
 
     items = list(cursor)
     has_next_page = len(items) > limit
@@ -98,8 +106,8 @@ def find(
     if has_next_page:
         items.pop()
 
-    next_cursor = get_next_cursor(items, sort) if has_next_page else None
-    prev_cursor = get_previous_cursor(items, sort) if has_previous else None
+    next_cursor = get_next_cursor(items, sorted_by) if has_next_page else None
+    prev_cursor = get_prev_cursor(items, sorted_by) if has_previous else None
 
     return PaginatedResult(
         data=items,
