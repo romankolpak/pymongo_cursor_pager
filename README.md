@@ -1,6 +1,6 @@
 # pymongo_cursor_pager
 
-This package implements cursor-based pagination for Python apps using PyMongo. Inspired a similar tool [mixmaxhq/mongo-cursor-pagination](https://github.com/mixmaxhq/mongo-cursor-pagination) for JavaScript.
+This package implements cursor-based pagination for Python apps using PyMongo. Inspired by a similar tool [mixmaxhq/mongo-cursor-pagination](https://github.com/mixmaxhq/mongo-cursor-pagination) for JavaScript.
 
 ## What is cursor-based pagination?
 
