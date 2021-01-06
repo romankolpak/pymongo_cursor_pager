@@ -49,5 +49,5 @@ PaginatedResult(data=[{'_id': ObjectId('..'), 'name': 'foo'}, {'_id': ObjectId('
 
 
 >>> result = find(client.my_db.my_collection, query={}, limit=2, next_cursor=result.next_cursor)
-PaginatedResult(data=[{'_id': ObjectId('..'), 'name': 'baz'}, {'_id': ObjectId('..'), 'name': 'quux'}], next_cursor=None, prev_cursor='IAAAAANfaWQAFgAAAAckZ3QAX5a1_Bq0RUg2wvYkAAA', has_next=False, has_previous=False)
+PaginatedResult(data=[{'_id': ObjectId('..'), 'name': 'baz'}, {'_id': ObjectId('..'), 'name': 'quux'}], next_cursor=None, prev_cursor='IAAAAANfaWQAFgAAAAckZ3QAX5a1_Bq0RUg2wvYkAAA', has_next=False, has_previous=True)
 ```
